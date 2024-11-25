@@ -7,12 +7,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static(path.join(__dirname, 'public'))); // Serve i file statici
+// Usa la porta dinamica di Render
+const PORT = process.env.PORT || 3000; // Imposta la porta fornita da Render
 
-// Serve il file index.html per la root
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
+app.use(express.static(path.join(__dirname, 'public')));
 
 const rooms = {};
 
@@ -49,13 +47,9 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('Giocatore disconnesso:', socket.id);
-        // TODO: Rimuovi il giocatore dalla stanza
     });
 });
 
-const PORT = process.env.PORT || 3000; // Render fornirà una porta dinamica tramite process.env.PORT
 server.listen(PORT, () => {
-    console.log(`Server avviato su http://localhost:${PORT}`);
+    console.log(`Server avviato su http://0.0.0.0:${PORT}`);
 });
-
-
