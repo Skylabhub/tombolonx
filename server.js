@@ -46,8 +46,9 @@ io.on('connection', (socket) => {
     });
 });
 
-// Avvio del server
+const PORT = process.env.PORT || 3000; // Usa la porta dinamica fornita da Render
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server avviato e in ascolto su http://0.0.0.0:${PORT}`);
 });
+
 
