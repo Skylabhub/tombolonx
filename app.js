@@ -1,4 +1,4 @@
-const socket = io('https://tuo-link-pubblico'); // Sostituisci con il link generato dalla piattaforma di hosting
+const socket = io('https://tombolonx.onrender.com'); // Sostituisci con il link generato dalla piattaforma di hosting
 ;
 
 let isHost = false;

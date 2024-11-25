@@ -10,6 +10,11 @@ const io = new Server(server, {
         origin: "*", // Permetti connessioni da qualsiasi dominio (puoi limitare questo valore a specifici domini)
         methods: ["GET", "POST"]
     }
+    app.use((req, res, next) => {
+        console.log(`Richiesta ricevuta: ${req.method} ${req.url}`);
+        next();
+    });
+
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
