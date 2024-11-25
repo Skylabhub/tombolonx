@@ -5,19 +5,14 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: "*", // Permetti connessioni da qualsiasi dominio (puoi limitare questo valore a specifici domini)
-        methods: ["GET", "POST"]
-    }
-    app.use((req, res, next) => {
-        console.log(`Richiesta ricevuta: ${req.method} ${req.url}`);
-        next();
-    });
+const io = new Server(server);
 
+app.use(express.static(path.join(__dirname, 'public'))); // Serve i file statici
+
+// Serve il file index.html per la root
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
-
-app.use(express.static(path.join(__dirname, 'public')));
 
 const rooms = {};
 
@@ -54,21 +49,11 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', () => {
         console.log('Giocatore disconnesso:', socket.id);
-        // Rimuovi il giocatore dalla stanza
-        for (const roomCode in rooms) {
-            const room = rooms[roomCode];
-            room.players = room.players.filter(player => player !== socket.id);
-            if (room.host === socket.id) {
-                delete rooms[roomCode];
-                io.to(roomCode).emit('error', 'L\'host ha lasciato la stanza');
-            }
-        }
+        // TODO: Rimuovi il giocatore dalla stanza
     });
 });
 
-const PORT = process.env.PORT || 3000; // Usa la porta fornita dal servizio di hosting o la porta 3000
+const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
     console.log(`Server avviato su http://0.0.0.0:${PORT}`);
 });
-
- 
