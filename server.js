@@ -1,60 +1,53 @@
 const express = require('express');
+const socketIo = require('socket.io');
 const http = require('http');
-const { Server } = require('socket.io');
-const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = socketIo(server);
 
-// Usa process.env.PORT per la porta dinamica di Render
-const PORT = process.env.PORT; // La porta è assegnata automaticamente da Render
+const PORT = process.env.PORT || 3000; // Usa la porta fornita da Render o 3000 in locale
 
-if (!PORT) {
-    console.error("La variabile d'ambiente PORT non è definita!");
-    process.exit(1);  // Uscita con errore
-}
+// Middleware per il logging delle richieste
+app.use((req, res, next) => {
+    console.log(`Richiesta ricevuta: ${req.method} ${req.url}`);
+    next();
+});
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Route di test
+app.get('/', (req, res) => {
+    res.send('Server funzionante! Puoi connetterti.');
+});
 
-const rooms = {};
-
+// Socket.IO per gestire le connessioni in tempo reale
 io.on('connection', (socket) => {
-    console.log('Un giocatore si è connesso:', socket.id);
+    console.log('Un client si è connesso:', socket.id);
 
     socket.on('createRoom', (roomCode) => {
-        rooms[roomCode] = { host: socket.id, players: [], numeriEstratti: [] };
         socket.join(roomCode);
-        io.to(socket.id).emit('roomCreated', roomCode);
+        console.log(`Stanza creata: ${roomCode}`);
+        socket.emit('roomCreated', `Hai creato la stanza ${roomCode}`);
     });
 
     socket.on('joinRoom', (roomCode) => {
-        if (rooms[roomCode]) {
-            rooms[roomCode].players.push(socket.id);
-            socket.join(roomCode);
-            io.to(socket.id).emit('roomJoined', roomCode);
-        } else {
-            io.to(socket.id).emit('error', 'Stanza non trovata');
-        }
+        socket.join(roomCode);
+        console.log(`Utente unito alla stanza: ${roomCode}`);
+        io.to(roomCode).emit('userJoined', `Un utente si è unito alla stanza ${roomCode}`);
     });
 
     socket.on('estraiNumero', (roomCode) => {
-        if (rooms[roomCode] && rooms[roomCode].host === socket.id) {
-            let numeroEstratto;
-            do {
-                numeroEstratto = Math.floor(Math.random() * 90) + 1;
-            } while (rooms[roomCode].numeriEstratti.includes(numeroEstratto));
-
-            rooms[roomCode].numeriEstratti.push(numeroEstratto);
-            io.to(roomCode).emit('numeroEstratto', numeroEstratto);
-        }
+        const numeroEstratto = Math.floor(Math.random() * 90) + 1;
+        console.log(`Numero estratto per la stanza ${roomCode}: ${numeroEstratto}`);
+        io.to(roomCode).emit('numeroEstratto', numeroEstratto);
     });
 
     socket.on('disconnect', () => {
-        console.log('Giocatore disconnesso:', socket.id);
+        console.log('Un client si è disconnesso:', socket.id);
     });
 });
 
-server.listen(PORT, () => {
-    console.log(`Server avviato su http://0.0.0.0:${PORT}`);
+// Avvio del server
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server avviato e in ascolto su http://0.0.0.0:${PORT}`);
 });
+
