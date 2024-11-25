@@ -7,8 +7,13 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-// Usa la porta dinamica di Render
-const PORT = process.env.PORT || 3000; // Imposta la porta fornita da Render
+// Usa process.env.PORT per la porta dinamica di Render
+const PORT = process.env.PORT; // La porta è assegnata automaticamente da Render
+
+if (!PORT) {
+    console.error("La variabile d'ambiente PORT non è definita!");
+    process.exit(1);  // Uscita con errore
+}
 
 app.use(express.static(path.join(__dirname, 'public')));
 
